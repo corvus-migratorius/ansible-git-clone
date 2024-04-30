@@ -1,0 +1,15 @@
+galaxy_info:
+  role_name: git_clone
+  namespace: genlab
+  author: "Asif Mahmud"
+  description: "Clone a private Github repo"
+  license: BSD
+  min_ansible_version: "2.1"
+
+  platforms:
+    - name: Ubuntu
+      versions: [ "focal" ]
+
+  galaxy_tags: [ prometheus ]
+
+dependencies: []
