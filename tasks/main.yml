@@ -1,86 +1,98 @@
 ---
-# tasks/main.yml   
 - name: Check if ssh key is already present
-  stat:
-    path: "{{ KEY_PATH }}"
   register: key_stat_result
+  ansible.builtin.stat:
+    path: "{{ git_clone_key_path }}"
 
 - name: Generate SSH key for accessing GitHub
-  command: "ssh-keygen -t rsa -f {{ KEY_PATH }} -N ''"
   when: not key_stat_result.stat.exists
+  changed_when: false
+  ansible.builtin.command: "ssh-keygen -t rsa -f {{ git_clone_key_path }} -N ''"
 
 - name: Get key content
-  command: "cat {{ KEY_PATH }}.pub"
+  changed_when: false
   register: key_content
+  ansible.builtin.command: "cat {{ git_clone_key_path }}.pub"
 
-
-- name: Check if known_host exists
-  stat:
-    path: "{{ KNOWN_HOSTS_PATH }}"
+- name: Check if `known_hosts` exists
   register: known_hosts_stat
+  ansible.builtin.stat:
+    path: "{{ git_clone_known_hosts_path }}"
 
-- name: Create known_hosts if it doesn't exist
-  file:
-    path: "{{ KNOWN_HOSTS_PATH }}"
-    state: touch
+- name: Create `known_hosts` if it doesn't exist
   when: not known_hosts_stat.stat.exists
+  ansible.builtin.file:
+    path: "{{ git_clone_known_hosts_path }}"
+    state: touch
+    mode: "0660"
 
-- name: Get the content of known hosts
-  shell: "cat {{ KNOWN_HOSTS_PATH }} | grep {{ GIT_SERVER_FQDN }}"
+- name: Get the content of `known hosts`
   register: host_stat
   failed_when: host_stat.rc > 1
+  changed_when: false
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && cat {{ git_clone_known_hosts_path }} | grep {{ git_clone_git_server_fqdn }}"
 
-
-- name: Modify known hosts
+- name: Modify `known hosts`
   block:
-  - name: Fetch GitHub public key
-    command: "ssh-keyscan -T 10 {{ GIT_SERVER_FQDN }}"
-    register: keyscan
 
-  - name: Add GitHub public key to ssh known_hosts
-    lineinfile:
-      path: "{{ KNOWN_HOSTS_PATH }}"
-      create: yes
-      line: "{{ item }}"
-    with_items: '{{ keyscan.stdout_lines }}'
-  when: host_stat.rc == 1
+    - name: Fetch GitHub public key
+      register: keyscan
+      changed_when: false
+      ansible.builtin.command: "ssh-keyscan -T 10 {{ git_clone_git_server_fqdn }}"
+
+    - name: Add GitHub public key to ssh known_hosts
+      when: host_stat.rc == 1
+      with_items: '{{ keyscan.stdout_lines }}'
+      ansible.builtin.lineinfile:
+        path: "{{ git_clone_known_hosts_path }}"
+        create: true
+        line: "{{ item }}"
+        mode: "0660"
 
 - name: Add SSH public key to GitHub account
-  uri:
-    url: "https://api.{{ GIT_SERVER_FQDN }}/user/keys"
-    validate_certs: no
+  ansible.builtin.uri:
+    url: "https://api.{{ git_clone_git_server_fqdn }}/user/keys"
+    validate_certs: false
     method: POST
     body:
-      title: "{{ KEY_TITLE }}"
+      title: "{{ git_clone_key_title }}"
       key: "{{ key_content.stdout }}"
     body_format: json
     headers:
       Content-Type: "application/json"
-      Authorization: "token {{ GITHUB_ACCESS_TOKEN }}"
+      Authorization: "token {{ git_clone_gh_access_token }}"
     status_code:
-    - 201
-    - 422
+      - 201
+      - 422
 
 - name: Configure SSH agent and clone repository
   block:
-  - name: Remove old repository
-    file:
-      path: "{{ CLONE_DEST }}"
-      state: absent
 
-  - name: Add SSH key to SSH agent
-    shell: |
-      eval $(ssh-agent -s)
-      ssh-add {{ KEY_PATH }}
+    - name: Remove old repository
+      ansible.builtin.file:
+        path: "{{ git_clone_dest }}"
+        state: absent
 
-  - name: Clone the repository
-    shell: GIT_SSH_COMMAND="ssh -i {{ KEY_PATH }} -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" {{ GIT_EXECUTABLE }} clone {{ GIT_REPO }} {{ CLONE_DEST }}
-  
-  - name: Switch branch 
-    shell: "{{ GIT_EXECUTABLE }} checkout {{ GIT_BRANCH }}"
-    args:
-      chdir: "{{ CLONE_DEST }}"
+    - name: Add SSH key to SSH agent
+      changed_when: false
+      ansible.builtin.shell: |
+        eval $(ssh-agent -s)
+        ssh-add {{ git_clone_key_path }}
+
+    - name: Clone the repository
+      changed_when: false
+      environment:
+        GIT_SSH_COMMAND: "ssh -i {{ git_clone_key_path }} -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+      ansible.builtin.command: "{{ git_clone_git_executable }} clone {{ git_clone_git_repo }} {{ git_clone_dest }}"
+
+    - name: Switch branch
+      changed_when: false
+      args:
+        chdir: "{{ git_clone_dest }}"
+      ansible.builtin.command: "{{ git_clone_git_executable }} checkout {{ git_clone_git_branch }}"
 
   always:
-  - name: Kill the ssh-agent
-    shell: export pid=`ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1`; kill $pid
+    - name: Kill the ssh-agent
+      changed_when: false
+      ansible.builtin.shell: set -o pipefail && export pid=$(ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1); kill $pid
