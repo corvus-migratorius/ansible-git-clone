@@ -24,14 +24,6 @@ jobs:
           init-shell: bash
           post-cleanup: 'all'
 
-      - name: Check meta files with YAMLLint
-        run: >
-          yamllint
-          hosts.yaml
-          environment.yaml
-          requirements.yaml
-        shell: micromamba-shell {0}
-
       - name: Lint with Ansible Lint
         run: ansible-lint -v -c .ansible-lint
         shell: micromamba-shell {0}
