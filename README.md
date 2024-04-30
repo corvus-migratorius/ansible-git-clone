@@ -19,24 +19,24 @@ Requirements
 
 * Encrypt the token by running the following command
     
-    `ansible-vault encrypt_string '<token>' --name 'GITHUB_ACCESS_TOKEN' --vault-password-file=/path/to/password/file`
+    `ansible-vault encrypt_string '<token>' --name 'git_clone_gh_access_token' --vault-password-file=/path/to/password/file`
 
 * Copy the generated encrypted string and paste it in the vars/main.yml file
 
 Role Variables
 --------------
 
-* KEY_TITLE: The title of the SSH key to be added to the GitHub account
-* KEY_PATH: Full path of the directory where the SSH key should be stored. A typical location would be `~/.ssh/<key_name>`
-* GITHUB_ACCESS_TOKEN: The personal access token associated with the GitHub account being used. The token should have the following scopes: 
+* git_clone_key_title: The title of the SSH key to be added to the GitHub account
+* git_clone_key_path: Full path of the directory where the SSH key should be stored. A typical location would be `~/.ssh/<key_name>`
+* git_clone_gh_access_token: The personal access token associated with the GitHub account being used. The token should have the following scopes: 
   - repo
   - admin:public_key
   - user
   - admin:gpg_ley
-* GIT_REPO: The SSH url of the GitHub repository to be cloned. An example would be `ssh://git@github.ibm.com/IBMZSoftware/nazare-demo-imsapp.git`
-* CLONE_DEST: The folder where repository should be cloned to
-* KNOWN_HOSTS_PATH: Location of the SSH `known_hosts` file on the target machine. A typical location would be `~/.ssh/known_hosts`
-* GIT_EXECUTABLE: The location of the git binary on the target machine. For example `/usr/bin/git`
+* git_clone_git_repo: The SSH url of the GitHub repository to be cloned. An example would be `ssh://git@github.ibm.com/IBMZSoftware/nazare-demo-imsapp.git`
+* git_clone_dest: The folder where repository should be cloned to
+* git_clone_known_hosts_path: Location of the SSH `known_hosts` file on the target machine. A typical location would be `~/.ssh/known_hosts`
+* git_clone_git_executable: The location of the git binary on the target machine. For example `/usr/bin/git`
 
 
 Example Playbook
