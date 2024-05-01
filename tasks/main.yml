@@ -33,6 +33,7 @@
   changed_when: false
   ansible.builtin.shell:
     cmd: "set -o pipefail && cat {{ git_clone_known_hosts_path }} | grep {{ git_clone_git_server_fqdn }}"
+    executable: /bin/bash
 
 - name: Modify `known hosts`
   block:
@@ -96,4 +97,6 @@
   always:
     - name: Kill the ssh-agent
       changed_when: false
-      ansible.builtin.shell: set -o pipefail && export pid=$(ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1); kill $pid
+      ansible.builtin.shell:
+        cmd: set -o pipefail && export pid=$(ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1); kill $pid
+        executable: /bin/bash
