@@ -10,6 +10,6 @@ galaxy_info:
     - name: Ubuntu
       versions: [ "focal" ]
 
-  galaxy_tags: [ prometheus ]
+  galaxy_tags: [ git ]
 
 dependencies: []
