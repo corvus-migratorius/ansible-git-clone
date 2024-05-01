@@ -68,35 +68,22 @@
       - 201
       - 422
 
-- name: Configure SSH agent and clone repository
-  block:
+- name: Add SSH key to SSH agent
+  changed_when: false
+  ansible.builtin.shell: |
+    eval $(ssh-agent -s)
+    ssh-add {{ git_clone_key_path }}
 
-    - name: Remove old repository
-      ansible.builtin.file:
-        path: "{{ git_clone_dest }}"
-        state: absent
+- name: Git checkout
+  ansible.builtin.git:
+    key_file: "{{ git_clone_key_path }}"
+    ssh_opts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    repo: "{{ git_clone_git_repo }}"
+    dest: "{{ git_clone_dest }}"
+    version: "{{ git_clone_repo_version }}"
 
-    - name: Add SSH key to SSH agent
-      changed_when: false
-      ansible.builtin.shell: |
-        eval $(ssh-agent -s)
-        ssh-add {{ git_clone_key_path }}
-
-    - name: Clone the repository
-      changed_when: false
-      environment:
-        GIT_SSH_COMMAND: "ssh -i {{ git_clone_key_path }} -v -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-      ansible.builtin.command: "{{ git_clone_git_executable }} clone {{ git_clone_git_repo }} {{ git_clone_dest }}"
-
-    - name: Switch branch
-      changed_when: false
-      args:
-        chdir: "{{ git_clone_dest }}"
-      ansible.builtin.command: "{{ git_clone_git_executable }} checkout {{ git_clone_git_branch }}"
-
-  always:
-    - name: Kill the ssh-agent
-      changed_when: false
-      ansible.builtin.shell:
-        cmd: set -o pipefail && export pid=$(ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1); kill $pid
-        executable: /bin/bash
+- name: Kill the ssh-agent
+  changed_when: false
+  ansible.builtin.shell:
+    cmd: set -o pipefail && export pid=$(ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1); kill $pid
+    executable: /bin/bash

@@ -13,3 +13,5 @@ git_clone_known_hosts_path: "~/.ssh/known_hosts"
 
 # Github FQDN
 git_clone_git_server_fqdn: github.com
+
+git_clone_repo_version: "HEAD"
