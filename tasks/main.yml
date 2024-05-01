@@ -1,15 +1,15 @@
 ---
-- name: Check if ssh key is already present
+- name: Check if SSH key is already present
   register: key_stat_result
   ansible.builtin.stat:
     path: "{{ git_clone_key_path }}"
 
-- name: Generate SSH key for accessing GitHub
+- name: Generate SSH key pair for accessing GitHub
   when: not key_stat_result.stat.exists
   changed_when: false
   ansible.builtin.command: "ssh-keygen -t rsa -f {{ git_clone_key_path }} -N ''"
 
-- name: Get key content
+- name: Get public key content
   changed_when: false
   register: key_content
   ansible.builtin.command: "cat {{ git_clone_key_path }}.pub"
