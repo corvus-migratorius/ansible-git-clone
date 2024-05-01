@@ -1,0 +1,15 @@
+---
+# Location of the git binary
+git_clone_git_executable: /usr/bin/git
+
+# Location of the SSH key
+git_clone_key_path: "~/.ssh/id_ed25519_git"
+
+# Name of the SSH key (e.g. git_ssh_key)
+git_clone_key_title: "id_ed25519_git"
+
+# Location of the SSH known hosts file
+git_clone_known_hosts_path: "~/.ssh/known_hosts"
+
+# Github FQDN
+git_clone_git_server_fqdn: github.com
