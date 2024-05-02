@@ -1,5 +1,10 @@
 ---
 - name: "Ensure an SSH client is installed"
+  ansible.builtin.apt:
+    name: openssh-client
+    state: present
+    update_cache: true
+
 - name: Check if SSH key is already present
   register: key_stat_result
   ansible.builtin.stat:
