@@ -1,4 +1,5 @@
 ---
+- name: "Ensure an SSH client is installed"
 - name: Check if SSH key is already present
   register: key_stat_result
   ansible.builtin.stat:
