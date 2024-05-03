@@ -71,12 +71,6 @@
           - 201
           - 422
 
-    - name: "Clone | add SSH key to SSH agent"
-      changed_when: false
-      ansible.builtin.shell: |
-        eval $(ssh-agent -s)
-        ssh-add {{ git_clone_key_path }}
-
     - name: "Clone | git checkout"
       become: true
       become_user: "{{ git_clone_user }}"
@@ -86,11 +80,3 @@
         repo: "{{ git_clone_git_repo }}"
         dest: "{{ git_clone_dest }}"
         version: "{{ git_clone_repo_version }}"
-
-- name: Kill the ssh-agent
-  become: true
-  become_user: "{{ git_clone_user }}"
-  changed_when: false
-  ansible.builtin.shell:
-    cmd: set -o pipefail && export pid=$(ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1); kill $pid
-    executable: /bin/bash
