@@ -1,5 +1,4 @@
 ---
-- name: Handle SSH key
 - name: "Clone | handle SSH key"
   become: true
   become_user: "{{ git_clone_user }}"
