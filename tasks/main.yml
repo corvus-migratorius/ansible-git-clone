@@ -3,6 +3,4 @@
   ansible.builtin.include_tasks: "prepare.yaml"
 
 - name: "Include target repository cloning tasks"
-  become: true
-  become_user: "{{ git_clone_user }}"
   ansible.builtin.include_tasks: "clone.yaml"
