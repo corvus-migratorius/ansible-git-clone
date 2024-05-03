@@ -14,27 +14,37 @@
     update_cache: true
 
 - name: Check if SSH key is already present
+  become: true
+  become_user: "{{ git_clone_user }}"
   register: key_stat_result
   ansible.builtin.stat:
     path: "{{ git_clone_key_path }}"
 
 - name: Generate SSH key pair for accessing GitHub
+  become: true
+  become_user: "{{ git_clone_user }}"
   when: not key_stat_result.stat.exists
   changed_when: false
   ansible.builtin.command:
     cmd: "ssh-keygen -t ed25519 -a 100 -C '{{ ansible_user }}@{{ ansible_host }}' -f {{ git_clone_key_path }} -N ''"
 
 - name: Get public key content
+  become: true
+  become_user: "{{ git_clone_user }}"
   changed_when: false
   register: key_content
   ansible.builtin.command: "cat {{ git_clone_key_path }}.pub"
 
 - name: Check if `known_hosts` exists
+  become: true
+  become_user: "{{ git_clone_user }}"
   register: known_hosts_stat
   ansible.builtin.stat:
     path: "{{ git_clone_known_hosts_path }}"
 
 - name: Create `known_hosts` if it doesn't exist
+  become: true
+  become_user: "{{ git_clone_user }}"
   when: not known_hosts_stat.stat.exists
   ansible.builtin.file:
     path: "{{ git_clone_known_hosts_path }}"
@@ -42,6 +52,8 @@
     mode: "0660"
 
 - name: Get the content of `known hosts`
+  become: true
+  become_user: "{{ git_clone_user }}"
   register: host_stat
   failed_when: host_stat.rc > 1
   changed_when: false
@@ -50,6 +62,8 @@
     executable: /bin/bash
 
 - name: Modify `known hosts`
+  become: true
+  become_user: "{{ git_clone_user }}"
   block:
 
     - name: Fetch GitHub public key
@@ -67,6 +81,8 @@
         mode: "0660"
 
 - name: Add SSH public key to GitHub account
+  become: true
+  become_user: "{{ git_clone_user }}"
   ansible.builtin.uri:
     url: "https://api.{{ git_clone_git_server_fqdn }}/user/keys"
     validate_certs: false
@@ -83,12 +99,16 @@
       - 422
 
 - name: Add SSH key to SSH agent
+  become: true
+  become_user: "{{ git_clone_user }}"
   changed_when: false
   ansible.builtin.shell: |
     eval $(ssh-agent -s)
     ssh-add {{ git_clone_key_path }}
 
 - name: Git checkout
+  become: true
+  become_user: "{{ git_clone_user }}"
   ansible.builtin.git:
     key_file: "{{ git_clone_key_path }}"
     ssh_opts: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
@@ -97,6 +117,8 @@
     version: "{{ git_clone_repo_version }}"
 
 - name: Kill the ssh-agent
+  become: true
+  become_user: "{{ git_clone_user }}"
   changed_when: false
   ansible.builtin.shell:
     cmd: set -o pipefail && export pid=$(ps -A | grep ssh-agent | awk 'NR==1{print $1}' | cut -d' ' -f1); kill $pid
