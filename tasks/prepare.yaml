@@ -1,0 +1,14 @@
+---
+- name: "Ensure an SSH client is installed"
+  when: ansible_os_family == "Debian"
+  ansible.builtin.apt:
+    name: openssh-client
+    state: present
+    update_cache: true
+
+- name: "Ensure an SSH client is installed"
+  when: ansible_os_family == "RedHat"
+  ansible.builtin.yum:
+    name: openssh-clients
+    state: present
+    update_cache: true
